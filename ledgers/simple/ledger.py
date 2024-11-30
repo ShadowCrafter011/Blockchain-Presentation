@@ -64,7 +64,6 @@ def main():
         json.dump(ledger, ledger_file, indent=4)
 
 def add_debt(ledger, pays, to, amount):
-    print(pays, to, amount)
     if pays in ledger[to]:
         ledger[to][pays] += amount
     else:

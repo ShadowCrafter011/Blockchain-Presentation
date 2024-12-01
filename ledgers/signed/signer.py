@@ -56,7 +56,6 @@ class Signer:
 
     def __get_private_key(self, name: str):
         if not name in self.private_keys:
-            print(f"Generate p-key for {name}")
             private_key = self.__generate_private_key()
             self.private_keys[name] = private_key
             self.__save_private_key(private_key, name)

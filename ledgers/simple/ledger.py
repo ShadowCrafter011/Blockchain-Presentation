@@ -38,13 +38,15 @@ def main():
             for person, payed in people_total.items():
                 people_total[person] = payed - per_person
 
-            people = sorted(people_total, key=lambda x: x[1])
+            people = sorted(people_total.items(), key=lambda x: x[1])
 
             for person in people:
-                if people_total[person] < 0:
-                    print(f"{person} owes {round(-people_total[person], 2)}$")
-                elif people_total[person] > 0:
-                    print(f"{person} recieves {round(people_total[person], 2)}$")
+                if person[1] < 0:
+                    print(f"{person[0]} owes {round(-person[1], 2)}$")
+                elif person[1] > 0:
+                    print(f"{person[0]} recieves {round(person[1], 2)}$")
+                else:
+                    print(f"{person[0]} owes and recieves nothing")
 
 
         case "pay":

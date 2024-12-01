@@ -1,5 +1,5 @@
 # Ignore ledger files
-ledgers/simple/ledger.json
+ledgers/*/ledger.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

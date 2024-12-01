@@ -16,7 +16,7 @@ class SimpleLedgerArgparse:
     
     def amount(self):
         try:
-            return int(self.args.amount)
+            return float(self.args.amount)
         except (TypeError, ValueError):
             raise ValueError(f"Invalid argument passed for transaction amount: {self.args.amount}")
     

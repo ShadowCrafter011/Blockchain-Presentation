@@ -2,17 +2,22 @@
 
 
 from parser import SimpleLedgerArgparse
-import json
 import os
 
 
 def main():
-    if not os.path.isfile("ledger.json"):
-        with open("ledger.json", "w") as ledger_file:
-            json.dump([], ledger_file, indent=4)
-
-    with open("ledger.json") as ledger_file:
-        ledger: list = json.load(ledger_file)
+    if not os.path.isfile("ledger.txt"):
+        ledger = []
+    else:
+        with open("ledger.txt") as ledger_file:
+            ledger_lines = ledger_file.read().split("\n")
+            ledger = []
+            for line in ledger_lines:
+                if not (stripped_line := line.strip()):
+                    continue
+                ledger.append({
+                    stripped_line.split(", ")[0]: float(stripped_line.split(", ")[1])
+                })
 
     parser = SimpleLedgerArgparse()
 
@@ -41,17 +46,18 @@ def main():
             people = sorted(people_total.items(), key=lambda x: x[1])
 
             for person in people:
-                if person[1] < 0:
-                    print(f"{person[0]} owes {round(-person[1], 2)}$")
-                elif person[1] > 0:
-                    print(f"{person[0]} recieves {round(person[1], 2)}$")
+                name, amount = person
+                if amount < 0:
+                    print(f"{name} owes {round(-amount, 2)}$")
+                elif amount > 0:
+                    print(f"{name} recieves {round(amount, 2)}$")
                 else:
-                    print(f"{person[0]} owes and recieves nothing")
+                    print(f"{name} owes and recieves nothing")
 
 
         case "pay":
             ledger.append({
-                f"{parser.person()}": parser.amount()
+                parser.person(): parser.amount()
             })
 
             print(f"Transaction successfull: {parser.person()} payed {parser.amount()}")
@@ -59,8 +65,13 @@ def main():
         case _:
             raise ValueError(f"Command {parser.command()} was not recognized")
 
-    with open("ledger.json", "w") as ledger_file:
-        json.dump(ledger, ledger_file, indent=4)
+    ledger_lines = []
+    for line in ledger:
+        name, amount = list(line.items())[0]
+        ledger_lines.append(f"{name}, {amount}")
+
+    with open("ledger.txt", "w") as ledger_file:
+        ledger_file.write("\n".join(ledger_lines))
 
 
 if __name__ == "__main__":

@@ -1,6 +1,9 @@
 # Ignore ledger files
 ledgers/*/ledger.txt
 
+# Ignore pem files
+ledgers/**/*.pem
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

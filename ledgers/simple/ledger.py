@@ -9,65 +9,56 @@ import os
 def main():
     if not os.path.isfile("ledger.json"):
         with open("ledger.json", "w") as ledger_file:
-            json.dump({}, ledger_file, indent=4)
+            json.dump([], ledger_file, indent=4)
 
     with open("ledger.json") as ledger_file:
-        ledger: object = json.load(ledger_file)
+        ledger: list = json.load(ledger_file)
 
     parser = SimpleLedgerArgparse()
 
     match parser.command():
         case "list":
-            for name, owes in ledger.items():
-                if len(owes) == 0:
-                    continue
+            total = 0
+            people_total = {}
+            for transaction in ledger:
+                amount = list(transaction.values())[0]
+                person = list(transaction.keys())[0]
+                total += amount
+                if person in people_total:
+                    people_total[person] += amount
+                else:
+                    people_total[person] = amount
 
-                print(name, "owes")
-                for owes_to, amount in owes.items():
-                    print(f"\t{amount}$ to {owes_to}")
-                print()
+            if len(people_total) == 0:
+                print("Ledger is empty")
+                return
+
+            per_person = total / len(people_total)
+
+            for person, payed in people_total.items():
+                people_total[person] = payed - per_person
+
+            people = sorted(people_total, key=lambda x: x[1])
+
+            for person in people:
+                if people_total[person] < 0:
+                    print(f"{person} owes {round(-people_total[person], 2)}$")
+                elif people_total[person] > 0:
+                    print(f"{person} recieves {round(people_total[person], 2)}$")
+
 
         case "pay":
-            person, to, amount = parser.person(), parser.to(), parser.amount()
+            ledger.append({
+                f"{parser.person()}": parser.amount()
+            })
 
-            if person is None or to is None or amount is None:
-                raise ValueError("Payment needs --amount, --person and --to to be set")
-            
-            # Add people in transaction to the root of the ledger if they are not there yet
-            if not person in ledger:
-                ledger[person] = {}
-            if not to in ledger:
-                ledger[to] = {}
-
-            # Check if person owed to target
-            if to in ledger[person]:
-                # Debt is overreturned
-                if amount > ledger[person][to]:
-                    overpay_amount = amount - ledger[person][to]
-                    del ledger[person][to]
-                    add_debt(ledger, person, to, overpay_amount)
-                # Debt is partially returned
-                elif amount < ledger[person][to]:
-                    ledger[person][to] -= amount
-                # Debt is paied up precisely
-                else:
-                    del ledger[person][to]
-            else:
-                add_debt(ledger, person, to, amount)
-
-            print(f"Transaction successfull")
+            print(f"Transaction successfull: {parser.person()} payed {parser.amount()}")
             
         case _:
             raise ValueError(f"Command {parser.command()} was not recognized")
 
     with open("ledger.json", "w") as ledger_file:
         json.dump(ledger, ledger_file, indent=4)
-
-def add_debt(ledger, pays, to, amount):
-    if pays in ledger[to]:
-        ledger[to][pays] += amount
-    else:
-        ledger[to][pays] = amount
 
 
 if __name__ == "__main__":

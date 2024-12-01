@@ -8,7 +8,6 @@ class SimpleLedgerArgparse:
         self.parser.add_argument("command")
         self.parser.add_argument("-a", "--amount")
         self.parser.add_argument("-p", "--person")
-        self.parser.add_argument("-t", "--to")
 
         self.args = self.parser.parse_args()
 
@@ -23,6 +22,3 @@ class SimpleLedgerArgparse:
     
     def person(self):
         return self.args.person
-    
-    def to(self):
-        return self.args.to

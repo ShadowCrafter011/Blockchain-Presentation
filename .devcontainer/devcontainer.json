@@ -21,7 +21,7 @@
 	// "forwardPorts": [],
 
 	// Uncomment the next line to run commands after the container is created.
-	"postCreateCommand": "pip install -r /workspaces/Blockchain-Presentation/requirements.txt"
+	"postCreateCommand": "pip install -r /workspaces/Blockchain-Presentation/requirements.txt --root-user-action ignore"
 
 	// Configure tool-specific properties.
 	// "customizations": {},

@@ -1,9 +1,13 @@
 # Ignore ledger files
 ledgers/*/ledger.txt
+ledgers/**/ledger-*.txt
 
 # Ignore pem files
 ledgers/**/*.pem
 ledgers/**/*.pub
+
+#Ignore clients files
+ledgers/**/clients.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

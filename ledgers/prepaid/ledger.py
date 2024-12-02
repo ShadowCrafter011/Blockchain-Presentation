@@ -67,12 +67,7 @@ def main():
 
         case "list":
             for name, currency_left in currency_amount.items():
-                if currency_left > prepay_amount:
-                    print(f"{name} recieves {currency_left - prepay_amount} DD")
-                elif currency_left < prepay_amount:
-                    print(f"{name} owes {prepay_amount - currency_left} DD")
-                else:
-                    print(f"{name} owes and recieves nothing")
+                print(f"{name} has {currency_left} DD")
 
         case "pay":
             name, to, amount, password = parser.person(), parser.to(), parser.amount(), parser.password()

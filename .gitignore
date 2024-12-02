@@ -3,6 +3,7 @@ ledgers/*/ledger.txt
 
 # Ignore pem files
 ledgers/**/*.pem
+ledgers/**/*.pub
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

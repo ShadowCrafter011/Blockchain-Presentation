@@ -63,11 +63,21 @@ def main():
 
 
         case "pay":
-            name, amount = parser.person(), parser.amount()
+            name, amount, password = parser.person(), parser.amount(), parser.password()
+            if name is None or amount is None or password is None:
+                print("Name, amount and password are required to sign a transaction")
+                return
+
+            try:
+                signature = signer.sign_message(str(amount), name, password)
+            except:
+                print(f"Could not sign message: Invalid password for {name}")
+                return
+            
             ledger.append({
                 "name": name,
                 "amount": amount,
-                "signature": signer.sign_message(f"{name}, {amount}", name)
+                "signature": signature
             })
 
             print(f"Transaction successfull: {parser.person()} payed {parser.amount()}")
@@ -85,7 +95,7 @@ def main():
 
 def verify_transaction(signer: Signer, name, amount, signature):
     return signer.verify_signature(
-        f"{name}, {amount}",
+        str(amount),
         name,
         signature
     )

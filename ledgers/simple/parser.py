@@ -8,6 +8,7 @@ class SimpleLedgerArgparse:
         self.parser.add_argument("command")
         self.parser.add_argument("-a", "--amount")
         self.parser.add_argument("-p", "--person")
+        self.parser.add_argument("--pw", "--password")
 
         self.args = self.parser.parse_args()
 
@@ -22,3 +23,6 @@ class SimpleLedgerArgparse:
     
     def person(self):
         return self.args.person
+    
+    def password(self):
+        return self.args.pw

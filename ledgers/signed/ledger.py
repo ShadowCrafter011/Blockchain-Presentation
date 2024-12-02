@@ -80,7 +80,7 @@ def main():
                 "signature": signature
             })
 
-            print(f"Transaction successfull: {parser.person()} payed {parser.amount()}")
+            print(f"Transaction successfull: {parser.person()} payed {parser.amount()}$")
             
         case _:
             raise ValueError(f"Command {parser.command()} was not recognized")

@@ -36,7 +36,7 @@ class Signer:
                 ),
                 hashes.SHA256()
             )
-        except ArithmeticError:
+        except:
             return False
         else:
             return True

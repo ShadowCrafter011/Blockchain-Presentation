@@ -20,11 +20,14 @@ def main():
     with open("clients.json") as clients_file:
         clients = json.load(clients_file)
 
-    digest = Hash(SHA256())
-    digest.update(
-        f"{time()}, {args.name}, {args.to}, {args.amount}".encode()
-    )
-    unique_id = base64.b64encode(digest.finalize()).decode()
+    if args.id:
+        unique_id = args.id
+    else:
+        digest = Hash(SHA256())
+        digest.update(
+            f"{time()}, {args.name}, {args.to}, {args.amount}".encode()
+        )
+        unique_id = base64.b64encode(digest.finalize()).decode()
 
     try:
         signature = signer.sign_message(f"{args.name}, {args.to}, {args.amount}, {unique_id}", args.name, args.password)

@@ -16,6 +16,7 @@ class Listener:
         self.signer = Signer()
 
         self.ledger = {}
+        self.used_ids = []
 
         if os.path.isfile(f"ledgers/ledger-{self.name}.txt"):
             with open(f"ledgers/ledger-{self.name}.txt") as ledger_file:
@@ -24,7 +25,8 @@ class Listener:
                 if not line.strip():
                     continue
 
-                name, to, amount, *_ = line.split(", ")
+                name, to, amount, unique_id, _ = line.split(", ")
+                self.used_ids.append(unique_id)
                 amount = float(amount)
                 if not name in self.ledger:
                     self.ledger[name] = 100.0
@@ -59,6 +61,14 @@ class Listener:
                 print(err)
                 self.socket.send(err.encode())
                 continue
+
+            if unique_id in self.used_ids:
+                err = f"ERR ID is not unique for {name} sending {amount} DD to {to}"
+                print(err)
+                self.socket.send(err.encode())
+                continue
+
+            self.used_ids.append(unique_id)
 
             if not name in self.ledger:
                 self.ledger[name] = 100.0

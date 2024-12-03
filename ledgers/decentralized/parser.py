@@ -8,6 +8,7 @@ def args():
     parser.add_argument("-p", "--password", required=True)
     parser.add_argument("-o", "--only")
     parser.add_argument("--change-signature", action="store_true")
+    parser.add_argument("--id")
     args = parser.parse_args()
     args = lower(args, "name", "to", "only")
     args.amount = float(args.amount)

@@ -2,6 +2,7 @@ from cryptography.hazmat.primitives.hashes import Hash, SHA256
 from cryptography.exceptions import InvalidSignature
 from signer import Signer
 from time import time
+import base64
 
 class Transaction:
     @classmethod
@@ -9,8 +10,8 @@ class Transaction:
         signer = Signer()
         
         digest = Hash(SHA256())
-        digest.update(f"{time()}, {name}, {to}, {amount}")
-        unique_id = digest.finalize()
+        digest.update(f"{time()}, {name}, {to}, {amount}".encode())
+        unique_id = base64.b64encode(digest.finalize()).decode()
 
         signature = signer.sign_message(
             f"{name}, {to}, {amount}, {unique_id}",

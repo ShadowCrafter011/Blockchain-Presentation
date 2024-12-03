@@ -23,6 +23,8 @@ def get_port(name, client_type):
 
     with open("clients.json", "w") as clients_file:
         json.dump(clients, clients_file)
+    
+    return max_port
 
 def free_port(name):
     create_clients_file()
@@ -36,7 +38,7 @@ def free_port(name):
         del clients["ledgers"][name]
 
     with open("clients.json", "w") as clients_file:
-        json.dump(clients_file)
+        json.dump(clients, clients_file)
 
 def create_clients_file():
     if not os.path.isfile("clients.json"):

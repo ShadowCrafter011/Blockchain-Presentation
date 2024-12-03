@@ -12,6 +12,9 @@ class Block:
     def add_transaction(self, transaction):
         self.transactions.append(transaction)
 
+    def num_transactions(self):
+        return len(self.transactions)
+
     def hash(self):
         digest = Hash(SHA256())
         digest.update(str(self.id).encode())

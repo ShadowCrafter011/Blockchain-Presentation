@@ -16,9 +16,13 @@ def main():
         return
     elif parser.command() != "setup":
         with open("ledger.txt") as ledger_file:
-            prepay_amount, other_lines = ledger_file.read().split("\n", maxsplit=1)
+            first_split = ledger_file.read().split("\n", maxsplit=1)
+            prepay_amount = first_split[0]
+            if len(first_split) == 2:
+                ledger_lines = first_split[1].split("\n")
+            else:
+                ledger_lines = []
             prepay_amount = float(prepay_amount)
-            ledger_lines = other_lines.split("\n")
             ledger = []
             currency_amount = {}
             ids = []

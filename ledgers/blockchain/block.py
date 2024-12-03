@@ -1,5 +1,6 @@
 from cryptography.hazmat.primitives.hashes import Hash, SHA256
 from transaction import Transaction
+from bitstring import BitArray
 import base64
 
 class Block:
@@ -31,9 +32,8 @@ class Block:
             transaction_lines.append(
                 f"{name} -> {to}, {amount}, {unique_id[:5]}-{unique_id[-5:]}, {signature[:5]}-{signature[-5:]}"
             )
-        hash = base64.b64encode(self.hash()).decode()
-        hash = f"Block hash {hash[:5]}-{hash[-5:]}"
-        previous_hash = f"Previous hash {self.previous_hash[:5]}-{self.previous_hash[-5:]}"
+        hash = f"Block hash {BitArray(self.hash()).bin[:20]}"
+        previous_hash = f"Previous hash {BitArray(base64.b64decode(self.previous_hash)).bin[:20]}"
         block_id = f"Block {self.id}"
         nonce = f"Nonce {self.nonce}"
         no_transactions = "No transactions"

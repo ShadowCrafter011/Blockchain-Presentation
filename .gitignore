@@ -6,8 +6,11 @@ ledgers/**/ledger-*.txt
 ledgers/**/*.pem
 ledgers/**/*.pub
 
-#Ignore clients files
+# Ignore clients files
 ledgers/**/clients.json
+
+# Ignore blockchain pickle
+ledgers/blockchain/blockchain.pickle
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

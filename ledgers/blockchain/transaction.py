@@ -45,7 +45,7 @@ class Transaction:
         self.signature = signature
 
     def to_bytes(self) -> bytes:
-        return f"{self.name}, {self.to}, {self.amount}, {self.unique_id}, {self.signature}".encode()
+        return f"TRANSACTION:{self.name}, {self.to}, {self.amount}, {self.unique_id}, {self.signature}".encode()
     
     def to_list(self) -> list:
         return [

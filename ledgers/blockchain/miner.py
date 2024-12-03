@@ -10,6 +10,9 @@ from signer import Signer
 from block import Block
 from time import sleep
 import argparse
+import pickle
+import base64
+import json
 import zmq
 
 class Miner:
@@ -44,9 +47,23 @@ class Miner:
             bits = BitArray(block.hash()).bin
             
             if bits.startswith("0" * difficulty):
-                print("Found valid nonce")
+                print(f"Found valid nonce {block.nonce} for block {block.id}")
+                
+                pickled_block = pickle.dumps(block)
+                block_string = f"BLOCK:{base64.b64encode(pickled_block).decode()}".encode()
 
-            sleep(1 / hashes)
+                with open("clients.json") as clients_file:
+                    clients = json.load(clients_file)
+
+                for port in list(clients["miners"].values()) + list(clients["ledgers"].values()):
+                    socket = zmq.Context().socket(zmq.REQ)
+                    socket.connect(f"tcp://127.0.0.1:{port}")
+                    socket.send(block_string)
+                    socket.recv()
+
+                block = block_queue.get()
+            else:
+                sleep(1 / hashes)
 
     def start(self):
         self.mine_thread.start()
@@ -55,21 +72,37 @@ class Miner:
         self.socket.bind(f"tcp://127.0.0.1:{self.port}")
 
         while True:
-            message = self.socket.recv()
-            print(message)
-            try:
-                transaction = Transaction.parse(message.decode())
-                # TODO: Validate that user has enough budget
-            except:
-                self.socket.send(f"Invalid transaction rejected by {self.name}".encode())
+            message = self.socket.recv().decode()
+            if message.startswith("TRANSACTION:"):
+                message = message.removeprefix("TRANSACTION:")
+                print(message)
+                try:
+                    transaction = Transaction.parse(message)
+                    # TODO: Validate that user has enough budget
 
-            if self.block.num_transactions() < self.max_transactions:
-                self.block.add_transaction(transaction)
+                    if self.block.num_transactions() < self.max_transactions:
+                        self.block.add_transaction(transaction)
+                        self.block_queue.put(self.block)
+                    else:
+                        self.transaction_queue.append(transaction)
+
+                    self.socket.send(b"OK")
+                except:
+                    self.socket.send(f"Invalid transaction rejected by {self.name}".encode())
+            elif message.startswith("BLOCK:"):
+                message = message.removeprefix("BLOCK:")
+                block: Block = pickle.loads(base64.b64decode(message))
+                hash = base64.b64encode(block.hash()).decode()
+                self.block = Block(block.id + 1, previous_hash=hash)
+
+                while len(self.transaction_queue) > 0:
+                    self.block.add_transaction(self.transaction_queue.pop(0))
+                    if self.block.num_transactions() >= self.max_transactions:
+                        break
+
                 self.block_queue.put(self.block)
-            else:
-                self.transaction_queue.append(transaction)
 
-            self.socket.send(b"OK")
+                self.socket.send(b"OK")
     
     def stop(self):
         free_port(self.name)

@@ -3,7 +3,7 @@ import os
 
 def get_port(name, client_type):
     if not client_type in ["miners", "ledgers"]:
-        raise ValueError("Can only give port to types client or miner")
+        raise ValueError(f"Can only give port to types miners or ledgers not {client_type}")
     
     create_clients_file()
     

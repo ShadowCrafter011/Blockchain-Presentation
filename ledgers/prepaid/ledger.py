@@ -70,6 +70,8 @@ def main():
             return
 
         case "list":
+            if len(currency_amount):
+                print("Ledger is empty")
             for name, currency_left in currency_amount.items():
                 print(f"{name} has {currency_left} DD")
 

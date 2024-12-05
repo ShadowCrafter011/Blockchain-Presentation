@@ -55,3 +55,8 @@ class Transaction:
             self.unique_id,
             self.signature
         ]
+    
+class MintTransaction:
+    def __init__(self, minter, amount):
+        self.minter = minter
+        self.amount = amount

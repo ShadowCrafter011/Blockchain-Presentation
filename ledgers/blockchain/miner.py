@@ -1,7 +1,7 @@
 #!/bin/env python3
 
+from transaction import Transaction, MintTransaction
 from port_handler import get_port, free_port
-from transaction import Transaction
 from multiprocessing import Queue
 from secrets import token_bytes
 from bitstring import BitArray
@@ -20,6 +20,7 @@ class Miner:
         self.name = name
         self.max_transactions = max_transactions
         self.hashes = hashes
+        self.difficulty = difficulty
         self.port = get_port(name, "miners")
 
         if self.port is None:
@@ -31,11 +32,11 @@ class Miner:
         self.block_queue = Queue()
         self.block_queue.put(self.block)
 
-        self.mine_thread = Thread(target=self.mine, args=(self.block_queue, self.hashes, difficulty), daemon=True)
+        self.mine_thread = Thread(target=self.mine, args=(name, self.block_queue, hashes, difficulty), daemon=True)
 
         self.transaction_queue = []
 
-    def mine(self, block_queue: Queue, hashes: int, difficulty: int):
+    def mine(self, name: str, block_queue: Queue, hashes: int, difficulty: int):
         block: Block = block_queue.get()
 
         while True:
@@ -48,6 +49,8 @@ class Miner:
             
             if bits.startswith("0" * difficulty):
                 print(f"Found valid nonce {block.nonce} for block {block.id}")
+
+                block.transactions.insert(0, MintTransaction(name, 50))
                 
                 pickled_block = pickle.dumps(block)
                 block_string = f"BLOCK:{base64.b64encode(pickled_block).decode()}".encode()
@@ -92,8 +95,11 @@ class Miner:
             elif message.startswith("BLOCK:"):
                 message = message.removeprefix("BLOCK:")
                 block: Block = pickle.loads(base64.b64decode(message))
-                hash = base64.b64encode(block.hash()).decode()
-                self.block = Block(block.id + 1, previous_hash=hash)
+
+                if not BitArray(block.hash()).bin.startswith("0" * self.difficulty):
+                    continue
+
+                self.block = Block(block.id + 1, previous_hash=block.b64_hash())
 
                 while len(self.transaction_queue) > 0:
                     self.block.add_transaction(self.transaction_queue.pop(0))

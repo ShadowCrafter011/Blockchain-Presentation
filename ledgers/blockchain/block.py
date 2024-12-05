@@ -1,5 +1,5 @@
 from cryptography.hazmat.primitives.hashes import Hash, SHA256
-from transaction import Transaction
+from transaction import Transaction, MintTransaction
 from bitstring import BitArray
 import base64
 
@@ -22,6 +22,9 @@ class Block:
         digest.update(self.previous_hash.encode())
         digest.update(str(self.nonce).encode())
         for transaction in self.transactions:
+            if isinstance(transaction, MintTransaction):
+                continue
+
             digest.update(transaction.to_bytes())
         return digest.finalize()
     
@@ -31,10 +34,15 @@ class Block:
     def __str__(self):
         transaction_lines = []
         for transaction in self.transactions:
-            name, to, amount, unique_id, signature = transaction.to_list()
-            transaction_lines.append(
-                f"{name} -> {to}, {amount}, {unique_id[:5]}-{unique_id[-5:]}, {signature[:5]}-{signature[-5:]}"
-            )
+            if isinstance(transaction, Transaction):
+                name, to, amount, unique_id, signature = transaction.to_list()
+                transaction_lines.append(
+                    f"{name} -> {to}, {amount}, {unique_id[:5]}-{unique_id[-5:]}, {signature[:5]}-{signature[-5:]}"
+                )
+            elif isinstance(transaction, MintTransaction):
+                transaction_lines.append(
+                    f"{transaction.minter} gets {transaction.amount} DD"
+                )
         hash = f"Block hash {BitArray(self.hash()).bin[:20]}"
         previous_hash = f"Previous hash {BitArray(base64.b64decode(self.previous_hash)).bin[:20]}"
         block_id = f"Block {self.id}"

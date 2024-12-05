@@ -49,14 +49,14 @@ class Miner:
 
         while True:
             if not block_queue.empty():
-                block = block_queue.get_nowait()            
+                block = block_queue.get()            
 
             block.nonce = int.from_bytes(token_bytes(4))
 
             bits = BitArray(block.hash()).bin
             
             if bits.startswith("0" * difficulty):
-                print(f"Found valid nonce {block.nonce} for block {block.id}")
+                print(f"{name}: Found valid nonce {block.nonce} for block {block.id}")
 
                 block.transactions.insert(0, MintTransaction(name, 50))
                 
@@ -86,7 +86,7 @@ class Miner:
             message = self.socket.recv().decode()
             if message.startswith("TRANSACTION:"):
                 message = message.removeprefix("TRANSACTION:")
-                print(message)
+                # print(message)
                 try:
                     transaction = Transaction.parse(message)
                     

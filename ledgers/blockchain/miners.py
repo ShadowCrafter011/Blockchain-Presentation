@@ -14,7 +14,7 @@ def main():
     parser.add_argument("--difficulty", default="3")
     args = parser.parse_args()
     args.max_transactions = int(args.max_transactions)
-    args.hashes = int(args.hashes)
+    args.hashes = float(args.hashes)
     args.difficulty = int(args.difficulty)
     args.number = int(args.number)
 

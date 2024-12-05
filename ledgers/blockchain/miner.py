@@ -137,7 +137,7 @@ def main():
     args = parser.parse_args()
     args.name = args.name.lower()
     args.max_transactions = int(args.max_transactions)
-    args.hashes = int(args.hashes)
+    args.hashes = float(args.hashes)
     args.difficulty = int(args.difficulty)
 
     miner = Miner(args.name, args.max_transactions, args.hashes, args.difficulty)

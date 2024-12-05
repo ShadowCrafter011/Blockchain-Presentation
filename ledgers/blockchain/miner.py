@@ -2,6 +2,7 @@
 
 from transaction import Transaction, MintTransaction
 from port_handler import get_port, free_port
+from blockchain_saver import BlockChain
 from multiprocessing import Queue
 from secrets import token_bytes
 from bitstring import BitArray
@@ -26,7 +27,14 @@ class Miner:
         if self.port is None:
             raise ValueError("Miner could not be started: Found no port")
 
-        self.block = Block(0)
+        blockchain = BlockChain.load()
+        longest_chain = blockchain.construct_tree()
+        if len(longest_chain) > 0:
+            last_block: Block = longest_chain[len(longest_chain) - 1]
+            self.block = Block(last_block.id + 1, previous_hash=last_block.b64_hash())
+        else:
+            self.block = Block(0)
+
         self.signer = Signer()
 
         self.block_queue = Queue()

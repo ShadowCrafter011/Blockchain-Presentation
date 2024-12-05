@@ -47,7 +47,7 @@ class BlockChain:
 
     def construct_tree(self, readable=True):
         if len(self.blocks) == 0:
-            raise ValueError("BlockChain is empty")
+            return []
 
         previous_hahes = []
         for block in self.blocks.values():

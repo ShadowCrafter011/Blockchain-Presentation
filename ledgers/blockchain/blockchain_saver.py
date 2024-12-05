@@ -108,10 +108,6 @@ class BlockChain:
                     node_process_stack.append(next_node)
 
         self.node_block_dict = nodes.copy()
-        
-        # Generate image of blockchain
-        for index, node_dict in enumerate(nodes["start"]):
-            UniqueDotExporter(node_dict["node"]).to_picture(f"blockchain-{index}.png")
 
         most_parented_node = None
         most_parents = 0
@@ -132,6 +128,10 @@ class BlockChain:
 
         # Insert genesis block
         longest_chain.insert(0, most_parented_node)
+
+        # Generate image of blockchain
+        UniqueDotExporter(longest_chain[0]).to_picture(f"blockchain.png")
+
         return [node_blocks[node] for node in longest_chain]
 
 def main():

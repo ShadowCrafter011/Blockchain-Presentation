@@ -3,7 +3,8 @@
 from transaction import Transaction, MintTransaction
 from anytree.exporter import UniqueDotExporter
 from port_handler import get_port, free_port
-from anytree import Node, PreOrderIter
+from threading import Thread
+from anytree import Node
 from block import Block
 import base64
 import pickle
@@ -23,8 +24,8 @@ class BlockChain:
         return BlockChain()
     
     def add_block(self, block: Block):
-        hash = base64.b64encode(block.hash()).decode()
-        self.blocks[hash] = block
+        self.blocks[block.b64_hash()] = block
+        Thread(target=self.saldo, daemon=True).start()
 
     def saldo(self):
         chain: list[Block] = self.construct_tree()
@@ -62,25 +63,33 @@ class BlockChain:
             node_process_stack.append(block)
 
         nodes = {}
+        all_nodes = []
         node_blocks = {}
         
         # Index nodes by their previous hash
         while len(node_process_stack) > 0:
             block = node_process_stack.pop(0)
-            hash = base64.b64encode(block.hash()).decode()
-            node_name = f"Block {block.id}" if readable else hash
+            node_name = f"Block {block.id}" if readable else block.b64_hash()
             node = Node(node_name)
             identifier = block.previous_hash or "start"
             if identifier in nodes:
-                nodes[identifier].append({
-                    "node": node,
-                    "block": block
-                })
+                already_added = False
+                for node_dict in nodes[identifier]:
+                    if node_dict["block"].hash() == block.hash():
+                        already_added = True
+
+                if not already_added:
+                    nodes[identifier].append({
+                        "node": node,
+                        "block": block
+                    })
+                    all_nodes.append(node)
             else:
                 nodes[identifier] = [{
                     "node": node,
                     "block": block
                 }]
+                all_nodes.append(node)
             if block.previous_hash:
                 node_process_stack.append(
                     self.blocks[block.previous_hash]
@@ -104,34 +113,26 @@ class BlockChain:
         for index, node_dict in enumerate(nodes["start"]):
             UniqueDotExporter(node_dict["node"]).to_picture(f"blockchain-{index}.png")
 
-        # Find longest path in blockchain tree
-        pathes = []
-        current_path = []
-        last_node = None
-        for node in PreOrderIter(nodes["start"][0]["node"]):
-            if last_node is None:
-                last_node = node
-                current_path.append(node)
-            else:
-                last_node_block = node_blocks[last_node]
-                current_node_block = node_blocks[node]
-                if current_node_block.previous_hash == last_node_block.b64_hash():
-                    last_node = node
-                    current_path.append(node)
-                else:
-                    pathes.append(current_path)
-                    current_path = [node]
-                    last_node = node
+        most_parented_node = None
+        most_parents = 0
+        for node in all_nodes:
+            parents = 0
+            n = node
+            while n.parent is not None:
+                parents += 1
+                n = n.parent
+            if parents > most_parents:
+                most_parented_node = node
+                most_parents = parents
+            
+        longest_chain = []
+        while most_parented_node.parent is not None:
+            longest_chain.insert(0, most_parented_node)
+            most_parented_node = most_parented_node.parent
 
-        if len(current_path) > 0:
-            pathes.append(current_path)
-        
-        longest_path = []
-        for path in pathes:
-            if len(path) > len(longest_path):
-                longest_path = path
-        
-        return [node_blocks[node] for node in longest_path]
+        # Insert genesis block
+        longest_chain.insert(0, most_parented_node)
+        return [node_blocks[node] for node in longest_chain]
 
 def main():
     blockchain = BlockChain.load()
@@ -145,9 +146,9 @@ def main():
         while True:
             message = socket.recv().decode()
             if message.startswith("BLOCK:"):
-                print(f"Recieved new block {message}")
                 message = message.removeprefix("BLOCK:")
                 block = pickle.loads(base64.b64decode(message))
+                print(f"Recieved Block {block.id} with {block.num_transactions()} transactions")
                 blockchain.add_block(block)
                 with open("blockchain.pickle", "wb") as blockchain_file:
                     pickle.dump(blockchain, blockchain_file)

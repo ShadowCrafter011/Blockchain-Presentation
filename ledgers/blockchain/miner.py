@@ -89,17 +89,24 @@ class Miner:
                 print(message)
                 try:
                     transaction = Transaction.parse(message)
-                    # TODO: Validate that user has enough budget
+                    
+                    saldo = BlockChain.load().saldo()
 
-                    if self.block.num_transactions() < self.max_transactions:
-                        self.block.add_transaction(transaction)
-                        self.block_queue.put(self.block)
+                    if transaction.name in saldo and saldo[transaction.name] >= transaction.amount:
+                        if self.block.num_transactions() < self.max_transactions:
+                            self.block.add_transaction(transaction)
+                            self.block_queue.put(self.block)
+                        else:
+                            self.transaction_queue.append(transaction)
+
+                        self.socket.send(b"OK")
                     else:
-                        self.transaction_queue.append(transaction)
-
-                    self.socket.send(b"OK")
+                        budget = 0
+                        if transaction.name in saldo:
+                            budget = saldo[transaction.name]
+                        self.socket.send(f"Not enough budget {transaction.amount} > {budget}".encode())
                 except:
-                    self.socket.send(f"Invalid transaction rejected by {self.name}".encode())
+                    self.socket.send(f"Invalid transaction rejected".encode())
             elif message.startswith("BLOCK:"):
                 message = message.removeprefix("BLOCK:")
                 block: Block = pickle.loads(base64.b64decode(message))

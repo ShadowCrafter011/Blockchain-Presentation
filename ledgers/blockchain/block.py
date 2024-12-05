@@ -25,6 +25,9 @@ class Block:
             digest.update(transaction.to_bytes())
         return digest.finalize()
     
+    def b64_hash(self) -> str:
+        return base64.b64encode(self.hash()).decode()
+    
     def __str__(self):
         transaction_lines = []
         for transaction in self.transactions:

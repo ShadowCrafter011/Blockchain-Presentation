@@ -12,6 +12,9 @@ ledgers/**/clients.json
 # Ignore blockchain pickle
 ledgers/blockchain/blockchain.pickle
 
+# Ignore blockchain png representations
+ledgers/blockchain/*.png
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

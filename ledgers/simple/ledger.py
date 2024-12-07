@@ -15,9 +15,9 @@ def main():
             for line in ledger_lines:
                 if not (stripped_line := line.strip()):
                     continue
-                ledger.append({
-                    stripped_line.split(", ")[0]: float(stripped_line.split(", ")[1])
-                })
+                ledger.append((
+                    stripped_line.split(", ")[0], float(stripped_line.split(", ")[1])
+                ))
 
     parser = SimpleLedgerArgparse()
 
@@ -25,9 +25,7 @@ def main():
         case "list":
             total = 0
             people_total = {}
-            for transaction in ledger:
-                amount = list(transaction.values())[0]
-                person = list(transaction.keys())[0]
+            for person, amount in ledger:
                 total += amount
                 if person in people_total:
                     people_total[person] += amount
@@ -56,9 +54,9 @@ def main():
 
 
         case "pay":
-            ledger.append({
-                parser.name(): parser.amount()
-            })
+            ledger.append((
+                parser.name(), parser.amount()
+            ))
 
             print(f"Transaction successfull: {parser.name()} payed {parser.amount()}$")
             
@@ -66,8 +64,7 @@ def main():
             raise ValueError(f"Command {parser.command()} was not recognized")
 
     ledger_lines = []
-    for line in ledger:
-        name, amount = list(line.items())[0]
+    for name, amount in ledger:
         ledger_lines.append(f"{name}, {amount}")
 
     with open("ledger.txt", "w") as ledger_file:

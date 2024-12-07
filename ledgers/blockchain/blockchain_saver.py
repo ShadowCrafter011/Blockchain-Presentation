@@ -7,6 +7,7 @@ from multiprocessing import Process
 from anytree import Node
 from block import Block
 from time import sleep
+import argparse
 import anytree
 import base64
 import pickle
@@ -110,7 +111,23 @@ class BlockChain:
         for index, genesis_node in enumerate(self.genesis_nodes):
             UniqueDotExporter(genesis_node).to_picture(f"blockchain-{index}.png")
 
+    def prune(self):
+        tombstoned = []
+        for hash, node in self.nodes.items():
+            if not node.block in self.longest_chain:
+                node.parent = None
+                tombstoned.append(hash)
+        for hash in tombstoned:
+            if self.nodes[hash] in self.genesis_nodes:
+                self.genesis_nodes.remove(self.nodes[hash])
+            del self.nodes[hash]
+        self.compute_end_nodes()
+
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--prune", action="store_true", default=False)
+    args = parser.parse_args()
+
     blockchain = BlockChain.load()
     
     port = get_port("blockchain", "ledgers")
@@ -125,6 +142,8 @@ def main():
             message = socket.recv().decode()
             block = pickle.loads(base64.b64decode(message))
             blockchain.add_block(block)
+            if args.prune:
+                blockchain.prune()
             with open("blockchain.pickle", "wb") as blockchain_file:
                 pickle.dump(blockchain, blockchain_file)
             print(f"Recieved Block {block.id} with {block.num_transactions()} transaction{"s" if block.num_transactions() != 1 else ""}")

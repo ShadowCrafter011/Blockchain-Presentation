@@ -3,7 +3,7 @@
 from blockchain_saver import BlockChain
 
 def main():
-    saldo = BlockChain.load().saldo()
+    saldo = BlockChain.load().saldo
     for name, amount in saldo.items():
         print(f"{name} has {amount} DD")
 

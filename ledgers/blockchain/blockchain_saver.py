@@ -3,9 +3,11 @@
 from transaction import Transaction, MintTransaction
 from anytree.exporter import UniqueDotExporter
 from port_handler import get_port, free_port
-from threading import Thread
+from multiprocessing import Process
 from anytree import Node
 from block import Block
+from time import sleep
+import anytree
 import base64
 import pickle
 import zmq
@@ -13,8 +15,15 @@ import os
 
 class BlockChain:
     def __init__(self):
-        self.blocks: dict[str, Block] = {}
-        self.node_block_dict = {}
+        self.nodes: dict[str, Node] = {}
+        self.genesis_nodes: list[Node] = []
+        self.most_parented_node: Node = None
+        self.end_nodes: list[Node] = []
+        self.last_block: Block = None
+        self.longest_chain: list[Block] = []
+        self.saldo: dict[str, float] = {}
+        self.processed_transactions: list[str] = []
+        self.used_ids: list[str] = []
 
     @classmethod
     def load(cls) -> BlockChain:
@@ -24,115 +33,82 @@ class BlockChain:
         return BlockChain()
     
     def add_block(self, block: Block):
-        self.blocks[block.b64_hash()] = block
-        Thread(target=self.saldo, daemon=True).start()
+        node = Node(f"Block {block.id}")
+        setattr(node, "block", block)
 
-    def saldo(self):
-        chain: list[Block] = self.construct_tree()
-        saldo = {}
-        for block in chain:
-            for transaction in block.transactions:
-                if isinstance(transaction, Transaction):
-                    if not transaction.name in saldo:
-                        saldo[transaction.name] = 0
-                    if not transaction.to in saldo:
-                        saldo[transaction.to] = 0
-                    saldo[transaction.name] -= transaction.amount
-                    saldo[transaction.to] += transaction.amount
-                elif isinstance(transaction, MintTransaction):
-                    if not transaction.minter in saldo:
-                        saldo[transaction.minter] = transaction.amount
-                    else:
-                        saldo[transaction.minter] += transaction.amount
-        return saldo
-
-    def construct_tree(self, readable=True):
-        if len(self.blocks) == 0:
-            return []
-
-        previous_hahes = []
-        for block in self.blocks.values():
-            previous_hahes.append(block.previous_hash)
+        if block.previous_hash in self.nodes:
+            node.parent = self.nodes[block.previous_hash]
+        else:
+            self.genesis_nodes.append(node)
         
-        # Find nodes without previous hash
-        node_process_stack = []
-        for hash, block in self.blocks.items():
-            if hash in previous_hahes:
-                continue
+        self.nodes[block.b64_hash()] = node
 
-            node_process_stack.append(block)
+        self.post_add_routine()
 
-        nodes = {}
-        all_nodes = []
-        node_blocks = {}
-        
-        # Index nodes by their previous hash
-        while len(node_process_stack) > 0:
-            block = node_process_stack.pop(0)
-            node_name = f"Block {block.id}" if readable else block.b64_hash()
-            node = Node(node_name)
-            identifier = block.previous_hash or "start"
-            if identifier in nodes:
-                already_added = False
-                for node_dict in nodes[identifier]:
-                    if node_dict["block"].hash() == block.hash():
-                        already_added = True
+    def compute_end_nodes(self):
+        self.end_nodes = []
+        for node in self.genesis_nodes:
+            self.end_nodes += list(anytree.findall(node, lambda n: len(n.children) == 0))
 
-                if not already_added:
-                    nodes[identifier].append({
-                        "node": node,
-                        "block": block
-                    })
-                    all_nodes.append(node)
-            else:
-                nodes[identifier] = [{
-                    "node": node,
-                    "block": block
-                }]
-                all_nodes.append(node)
-            if block.previous_hash:
-                node_process_stack.append(
-                    self.blocks[block.previous_hash]
-                )
-
-            # To be able to identify blocks by node
-            node_blocks[node] = block
-
-        # Construct blockchain tree with previous hashes index
-        node_process_stack: list[dict] = [n for n in nodes["start"]]
-        while len(node_process_stack) > 0:
-            to_process = node_process_stack.pop(0)
-            if to_process["block"].b64_hash() in nodes:
-                for next_node in nodes[to_process["block"].b64_hash()]:
-                    next_node["node"].parent = to_process["node"]
-                    node_process_stack.append(next_node)
-
-        self.node_block_dict = nodes.copy()
-
-        most_parented_node = None
-        most_parents = -1
-        for node in all_nodes:
+    def compute_most_parented_node(self):
+        max_parents = -1
+        self.most_parented_node = None
+        for node in self.end_nodes:
             parents = 0
             n = node
-            while n.parent is not None:
+            while n.parent:
                 parents += 1
                 n = n.parent
-            if parents > most_parents:
-                most_parented_node = node
-                most_parents = parents
-            
-        longest_chain = []
-        while most_parented_node.parent is not None:
-            longest_chain.insert(0, most_parented_node)
-            most_parented_node = most_parented_node.parent
+            if parents > max_parents:
+                max_parents = parents
+                self.most_parented_node = node
+    
+    def compute_longest_chain(self):
+        node = self.most_parented_node
+        self.longest_chain = []
+        while node.parent:
+            self.longest_chain.insert(0, node.block)
+            node = node.parent
+        self.longest_chain.insert(0, node.block)
+    
+    def compute_last_block(self):
+        chain = self.longest_chain
+        self.last_block = chain[len(chain) - 1]
 
-        # Insert genesis block
-        longest_chain.insert(0, most_parented_node)
+    def compute_saldo(self):
+        self.saldo = {}
+        self.processed_transactions = []
+        self.used_ids = []
+        for block in self.longest_chain:
+            for transaction in block.transactions:
+                self.processed_transactions.append(transaction.signature)
+                self.used_ids.append(transaction.unique_id)
 
-        # Generate image of blockchain
-        UniqueDotExporter(longest_chain[0]).to_picture(f"blockchain.png")
+                if isinstance(transaction, Transaction):
+                    if not transaction.name in self.saldo:
+                        self.saldo[transaction.name] = 0
+                    if not transaction.to in self.saldo:
+                        self.saldo[transaction.to] = 0
 
-        return [node_blocks[node] for node in longest_chain]
+                    self.saldo[transaction.name] -= transaction.amount
+                    self.saldo[transaction.to] += transaction.amount
+
+                if isinstance(transaction, MintTransaction):
+                    if not transaction.minter in self.saldo:
+                        self.saldo[transaction.minter] = transaction.amount
+                    else:
+                        self.saldo[transaction.minter] += transaction.amount
+
+    def post_add_routine(self):
+        self.compute_end_nodes()
+        self.compute_most_parented_node()
+        self.compute_longest_chain()
+        self.compute_last_block()
+        self.compute_saldo()
+
+    def visualize(self):
+        for index, genesis_node in enumerate(self.genesis_nodes):
+            UniqueDotExporter(genesis_node).to_picture(f"blockchain-{index}.png")
 
 def main():
     blockchain = BlockChain.load()
@@ -142,19 +118,28 @@ def main():
     socket = zmq.Context().socket(zmq.REP)
     socket.bind(f"tcp://127.0.0.1:{port}")
 
+    Process(target=visualize_process, args=(1,), daemon=True).start()
+
     try:
         while True:
             message = socket.recv().decode()
-            if message.startswith("BLOCK:"):
-                message = message.removeprefix("BLOCK:")
-                block = pickle.loads(base64.b64decode(message))
-                print(f"Recieved Block {block.id} with {block.num_transactions()} transactions")
-                blockchain.add_block(block)
-                with open("blockchain.pickle", "wb") as blockchain_file:
-                    pickle.dump(blockchain, blockchain_file)
+            block = pickle.loads(base64.b64decode(message))
+            blockchain.add_block(block)
+            with open("blockchain.pickle", "wb") as blockchain_file:
+                pickle.dump(blockchain, blockchain_file)
+            print(f"Recieved Block {block.id} with {block.num_transactions()} transaction{"s" if block.num_transactions() != 1 else ""}")
             socket.send(b"OK")
     except KeyboardInterrupt:
         free_port("blockchain")
+
+
+def visualize_process(interval):
+    try:
+        while True:
+            BlockChain.load().visualize()
+            sleep(interval)
+    except KeyboardInterrupt:
+        pass
 
 if __name__ == "__main__":
     main()

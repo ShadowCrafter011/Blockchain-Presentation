@@ -26,7 +26,7 @@ class SimpleLedgerArgparse:
         return self.args.name
     
     def password(self):
-        return self.args.pw
+        return self.args.password
     
     def to(self):
         return self.args.to

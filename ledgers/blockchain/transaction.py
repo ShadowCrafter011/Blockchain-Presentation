@@ -45,7 +45,7 @@ class Transaction:
         self.signature = signature
 
     def to_bytes(self) -> bytes:
-        return f"TRANSACTION:{self.name}, {self.to}, {self.amount}, {self.unique_id}, {self.signature}".encode()
+        return f"{self.name}, {self.to}, {self.amount}, {self.unique_id}, {self.signature}".encode()
     
     def to_list(self) -> list:
         return [
@@ -57,6 +57,19 @@ class Transaction:
         ]
     
 class MintTransaction:
-    def __init__(self, minter, amount):
+    def __init__(self, minter, amount, password="123"):
         self.minter = minter
         self.amount = amount
+        
+        digest = Hash(SHA256())
+        digest.update(f"{time()}, {minter}, {amount}".encode())
+        self.unique_id = base64.b64encode(digest.finalize()).decode()
+
+        self.signature = Signer().sign_message(
+            f"{minter}, {amount}, {self.unique_id}",
+            minter,
+            password
+        )
+
+    def to_bytes(self) -> bytes:
+        return f"{self.minter}, {self.amount}, {self.unique_id}, {self.unique_id}".encode()

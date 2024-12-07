@@ -110,7 +110,7 @@ class BlockChain:
         self.node_block_dict = nodes.copy()
 
         most_parented_node = None
-        most_parents = 0
+        most_parents = -1
         for node in all_nodes:
             parents = 0
             n = node

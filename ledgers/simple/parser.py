@@ -22,8 +22,8 @@ class SimpleLedgerArgparse:
         except (TypeError, ValueError):
             raise ValueError(f"Invalid argument passed for transaction amount: {self.args.amount}")
     
-    def person(self):
-        return self.args.person
+    def name(self):
+        return self.args.name
     
     def password(self):
         return self.args.pw

@@ -76,7 +76,7 @@ def main():
                 print(f"{name} has {currency_left} DD")
 
         case "pay":
-            name, to, amount, password = parser.person(), parser.to(), parser.amount(), parser.password()
+            name, to, amount, password = parser.name(), parser.to(), parser.amount(), parser.password()
             if name is None or to is None or amount is None or password is None:
                 print("Name, to, amount and password are required to sign a transaction")
                 return
@@ -103,7 +103,7 @@ def main():
                 "signature": signature
             })
 
-            print(f"Transaction successfull: {parser.person()} payed {parser.amount()} DD to {parser.to()}")
+            print(f"Transaction successfull: {parser.name()} payed {parser.amount()} DD to {parser.to()}")
             
         case _:
             raise ValueError(f"Command {parser.command()} was not recognized")

@@ -22,9 +22,6 @@ class Block:
         digest.update(self.previous_hash.encode())
         digest.update(str(self.nonce).encode())
         for transaction in self.transactions:
-            if isinstance(transaction, MintTransaction):
-                continue
-
             digest.update(transaction.to_bytes())
         return digest.finalize()
     

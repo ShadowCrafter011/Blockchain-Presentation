@@ -130,6 +130,16 @@ class Miner:
         free_port(self.name)
 
 def main():
+    args = miner_args()
+
+    miner = Miner(args.name, args.max_transactions, args.hashes, args.difficulty)
+
+    try:
+        miner.start()
+    except KeyboardInterrupt:
+        miner.stop()
+
+def miner_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("name")
     parser.add_argument("-m", "--max-transactions", default="1")
@@ -140,13 +150,7 @@ def main():
     args.max_transactions = int(args.max_transactions)
     args.hashes = float(args.hashes)
     args.difficulty = int(args.difficulty)
-
-    miner = Miner(args.name, args.max_transactions, args.hashes, args.difficulty)
-
-    try:
-        miner.start()
-    except KeyboardInterrupt:
-        miner.stop()
+    return args
 
 if __name__ == "__main__":
     main()

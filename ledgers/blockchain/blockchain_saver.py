@@ -3,6 +3,7 @@
 from transaction import Transaction, MintTransaction
 from anytree.exporter import UniqueDotExporter
 from port_handler import get_port, free_port
+from fraudulent_id import FraudulentId
 from multiprocessing import Process
 from anytree import Node
 from block import Block

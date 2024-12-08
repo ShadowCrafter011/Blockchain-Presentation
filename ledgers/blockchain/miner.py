@@ -20,7 +20,7 @@ class Miner:
     def __init__(self, name, max_transactions, hashes, difficulty):
         self.name = name
         # Be able to have at least one transaction along with mint transaction
-        self.max_transactions = min(max_transactions + 1, 2)
+        self.max_transactions = max(max_transactions + 1, 2)
         self.hashes = hashes
         self.difficulty = difficulty
         self.port = get_port(name, "miners")
@@ -62,8 +62,7 @@ class Miner:
                 if block.num_transactions() >= self.max_transactions:
                     break
 
-                if transactions[0].signature in blockchain.processed_transactions:
-                    transactions.remove(transaction)
+                if transaction.signature in blockchain.processed_transactions:
                     continue
 
                 block.add_transaction(transaction)

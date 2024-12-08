@@ -5,11 +5,13 @@ from anytree.exporter import UniqueDotExporter
 from port_handler import get_port, free_port
 from fraudulent_id import FraudulentId
 from multiprocessing import Process
+from bitstring import BitArray
 from anytree import Node
 from block import Block
 from time import sleep
 import argparse
 import anytree
+import sqlite3
 import base64
 import pickle
 import zmq
@@ -29,8 +31,8 @@ class BlockChain:
 
     @classmethod
     def load(cls) -> BlockChain:
-        if os.path.isfile("blockchain.pickle"):
-            with open("blockchain.pickle", "rb") as blockchain_file:
+        if os.path.isfile("/workspaces/Blockchain-Presentation/ledgers/blockchain/blockchain.pickle"):
+            with open("/workspaces/Blockchain-Presentation/ledgers/blockchain/blockchain.pickle", "rb") as blockchain_file:
                 return pickle.load(blockchain_file)
         return BlockChain()
     
@@ -124,6 +126,14 @@ class BlockChain:
             del self.nodes[hash]
         self.compute_end_nodes()
 
+    def send_longest_chain_to_db(self):
+        con = sqlite3.connect("/workspaces/Blockchain-Presentation/viewer/db.sqlite3")
+        cur = con.cursor()
+        for block in self.longest_chain:
+            save_block_to_db(con, cur, block)
+        cur.close()
+        con.close()
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--prune", action="store_true", default=False)
@@ -138,20 +148,43 @@ def main():
 
     Process(target=visualize_process, args=(1,), daemon=True).start()
 
+    con = sqlite3.connect("/workspaces/Blockchain-Presentation/viewer/db.sqlite3")
+    cur = con.cursor()
+    # cur.execute("INSERT INTO blockchain_block ('int_id', 'name', 'to', 'amount', 'unique_id', 'signature') VALUES ('0', 'lukas', 'nithus', 50, 'id', 'sig')")
+
     try:
         while True:
             message = socket.recv().decode()
-            block = pickle.loads(base64.b64decode(message))
+            block: Block = pickle.loads(base64.b64decode(message))
             blockchain.add_block(block)
             if args.prune:
                 blockchain.prune()
-            with open("blockchain.pickle", "wb") as blockchain_file:
+            with open("/workspaces/Blockchain-Presentation/ledgers/blockchain/blockchain.pickle", "wb") as blockchain_file:
                 pickle.dump(blockchain, blockchain_file)
             print(f"Recieved Block {block.id} with {block.num_transactions()} transaction{"s" if block.num_transactions() != 1 else ""}")
+
+            save_block_to_db(con, cur, block)
+
             socket.send(b"OK")
     except KeyboardInterrupt:
         free_port("blockchain")
+        cur.close()
+        con.close()
 
+
+def save_block_to_db(con, cur, block: Block):
+    transactions = []
+    for transaction in block.transactions:
+        fields = [type(transaction).__name__]
+        fields += transaction.to_list()
+        fields = map(lambda f: str(f), fields)
+        transactions.append(",".join(fields))
+    col_names = "('int_id', 'nonce', 'hash', 'previous_hash', 'transactions')"
+    hash = BitArray(block.hash()).bin
+    previous_hash = BitArray(base64.b64decode(block.previous_hash.encode())).bin
+    values = f"('{block.id}', {block.nonce}, '{hash}', '{previous_hash}', '{";".join(transactions)}')"
+    cur.execute(f"INSERT INTO blockchain_block {col_names} VALUES {values}")
+    con.commit()
 
 def visualize_process(interval):
     try:

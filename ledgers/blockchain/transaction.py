@@ -73,3 +73,11 @@ class MintTransaction:
 
     def to_bytes(self) -> bytes:
         return f"{self.minter}, {self.amount}, {self.unique_id}, {self.unique_id}".encode()
+    
+    def to_list(self) -> list:
+        return [
+            self.minter,
+            self.amount,
+            self.unique_id,
+            self.signature
+        ]

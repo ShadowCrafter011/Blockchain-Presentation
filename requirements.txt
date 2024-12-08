@@ -1,9 +1,16 @@
 anytree==2.12.1
+asgiref==3.8.1
 bitarray==2.9.3
 bitstring==4.2.3
 cffi==1.17.1
 cryptography==44.0.0
+Django==5.1.4
+django-appconf==1.0.6
+django-compressor==4.5.1
 graphviz==0.20.3
 pycparser==2.22
 pyzmq==26.2.0
+rcssmin==1.1.2
+rjsmin==1.2.2
 six==1.16.0
+sqlparse==0.5.2

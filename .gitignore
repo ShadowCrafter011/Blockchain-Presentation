@@ -15,6 +15,12 @@ ledgers/blockchain/blockchain.pickle
 # Ignore blockchain png representations
 ledgers/blockchain/*.png
 
+# Ignore node modules
+node_modules/
+
+# Ignore tailwind output file
+viewer/css/output.css
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

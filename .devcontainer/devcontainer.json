@@ -9,7 +9,8 @@
 	"customizations": {
 		"vscode": {
 			"extensions": [
-				"ms-python.python"
+				"ms-python.python",
+				"bradlc.vscode-tailwindcss"
 			]
 		}
 	},
@@ -21,7 +22,7 @@
 	// "forwardPorts": [],
 
 	// Uncomment the next line to run commands after the container is created.
-	"postCreateCommand": "pip install -r /workspaces/Blockchain-Presentation/requirements.txt --root-user-action ignore"
+	"postCreateCommand": "pip install -r /workspaces/Blockchain-Presentation/requirements.txt --root-user-action ignore && (cd /workspaces/Blockchain-Presentation/viewer && npm install && python3 manage.py migrate)"
 
 	// Configure tool-specific properties.
 	// "customizations": {},

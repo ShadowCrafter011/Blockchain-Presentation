@@ -19,7 +19,7 @@ ledgers/blockchain/*.png
 node_modules/
 
 # Ignore tailwind output file
-viewer/css/output.css
+viewer/static/src/output.css
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

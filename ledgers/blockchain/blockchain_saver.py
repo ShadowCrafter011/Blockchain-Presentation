@@ -31,8 +31,8 @@ class BlockChain:
 
     @classmethod
     def load(cls) -> BlockChain:
-        if os.path.isfile("/workspaces/Blockchain-Presentation/ledgers/blockchain/blockchain.pickle"):
-            with open("/workspaces/Blockchain-Presentation/ledgers/blockchain/blockchain.pickle", "rb") as blockchain_file:
+        if os.path.isfile("blockchain.pickle"):
+            with open("blockchain.pickle", "rb") as blockchain_file:
                 return pickle.load(blockchain_file)
         return BlockChain()
     
@@ -159,7 +159,7 @@ def main():
             blockchain.add_block(block)
             if args.prune:
                 blockchain.prune()
-            with open("/workspaces/Blockchain-Presentation/ledgers/blockchain/blockchain.pickle", "wb") as blockchain_file:
+            with open("blockchain.pickle", "wb") as blockchain_file:
                 pickle.dump(blockchain, blockchain_file)
             print(f"Recieved Block {block.id} with {block.num_transactions()} transaction{"s" if block.num_transactions() != 1 else ""}")
 

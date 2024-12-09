@@ -3,6 +3,13 @@ from .models import Block
 
 def root(request):
     blocks = Block.objects.all().order_by("-id").values()
+    for block in blocks:
+        num_transactions = len(block["transactions"].split(";"))
+        block["num_transactions"] = f"{num_transactions} transaction{"" if num_transactions == 1 else "s"}"
+        mint = block["transactions"].split(";")[0]
+        mint_transaction = mint.split(",")
+        if mint_transaction[0] == "MintTransaction":
+            block["minter"] = f"Mined by {mint_transaction[1]}"
     return render(request, "root.html", { "blocks": blocks })
 
 def block(request, hash):

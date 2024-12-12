@@ -9,7 +9,7 @@ import argparse
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("number")
-    parser.add_argument("-m", "--max-transactions", default="1")
+    parser.add_argument("-m", "--max-transactions", default="5")
     parser.add_argument("--hashes", default="16")
     parser.add_argument("--difficulty", default="8")
     args = parser.parse_args()

@@ -39,6 +39,8 @@ class Miner:
         for _ in range(self.transactions_queue.qsize()):
             transactions.append(self.transactions_queue.get())
 
+        last_log = ""
+
         while True:
             try:
                 blockchain = BlockChain.load()
@@ -67,7 +69,10 @@ class Miner:
 
                 block.add_transaction(transaction)
 
-            print(f"Trying nonce for Block {block.id} with {block.num_transactions()} transaction{"s" if block.num_transactions() != 1 else ""}")
+            msg = f"{self.name}: Trying nonce for Block {block.id} with {block.num_transactions()} transaction{"s" if block.num_transactions() != 1 else ""}"
+            if msg != last_log:
+                print(msg)
+                last_log = msg
 
             # Add random nonce to the block to try and achieve n leading 0 bits on the hash
             block.nonce = int.from_bytes(token_bytes(4))
@@ -142,7 +147,7 @@ def main():
 def miner_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("name")
-    parser.add_argument("-m", "--max-transactions", default="1")
+    parser.add_argument("-m", "--max-transactions", default="5")
     parser.add_argument("--hashes", default="16")
     parser.add_argument("--difficulty", default="8")
     args = parser.parse_args()

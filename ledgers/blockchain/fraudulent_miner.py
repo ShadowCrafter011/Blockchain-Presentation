@@ -38,7 +38,6 @@ class FraudulentMiner:
             print(f"{self.name}: Found valid nonce {self.block.nonce} for block {self.block.id}")
             
             pickled_block = pickle.dumps(self.block)
-            block_string = f"{base64.b64encode(pickled_block).decode()}".encode()
 
             with open("clients.json") as clients_file:
                 clients = json.load(clients_file)
@@ -46,7 +45,7 @@ class FraudulentMiner:
             for port in clients["ledgers"].values():
                 socket = zmq.Context().socket(zmq.REQ)
                 socket.connect(f"tcp://127.0.0.1:{port}")
-                socket.send(block_string)
+                socket.send(pickled_block)
                 socket.recv()
 
             self.block = Block(FraudulentId(self.block.id + 1), previous_hash=self.block.b64_hash())

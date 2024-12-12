@@ -18,10 +18,9 @@ def main():
 
     if len(clients["miners"]) == 0:
         raise ValueError("No miners to send transaction to")
-    
-    socket = zmq.Context().socket(zmq.REQ)
 
     for miner, port in clients["miners"].items():
+        socket = zmq.Context().socket(zmq.REQ)
         socket.connect(f"tcp://127.0.0.1:{port}")
 
         socket.send(transaction.to_bytes())

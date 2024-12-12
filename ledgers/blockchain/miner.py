@@ -62,10 +62,12 @@ class Miner:
                 if block.num_transactions() >= self.max_transactions:
                     break
 
-                if transaction.signature in blockchain.processed_transactions:
+                if transaction.unique_id in blockchain.used_ids:
                     continue
 
                 block.add_transaction(transaction)
+
+            print(f"Trying nonce for Block {block.id} with {block.num_transactions()} transaction{"s" if block.num_transactions() != 1 else ""}")
 
             # Add random nonce to the block to try and achieve n leading 0 bits on the hash
             block.nonce = int.from_bytes(token_bytes(4))
@@ -76,7 +78,6 @@ class Miner:
                 print(f"{self.name}: Found valid nonce {block.nonce} for block {block.id}")
                 
                 pickled_block = pickle.dumps(block)
-                block_string = f"{base64.b64encode(pickled_block).decode()}".encode()
 
                 with open("clients.json") as clients_file:
                     clients = json.load(clients_file)
@@ -84,7 +85,7 @@ class Miner:
                 for port in clients["ledgers"].values():
                     socket = zmq.Context().socket(zmq.REQ)
                     socket.connect(f"tcp://127.0.0.1:{port}")
-                    socket.send(block_string)
+                    socket.send(pickled_block)
                     socket.recv()
             else:
                 sleep(1 / self.hashes)

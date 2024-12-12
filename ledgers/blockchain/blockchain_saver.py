@@ -26,7 +26,6 @@ class BlockChain:
         self.last_block: Block = None
         self.longest_chain: list[Block] = []
         self.saldo: dict[str, float] = {}
-        self.processed_transactions: list[str] = []
         self.used_ids: list[str] = []
 
     @classmethod
@@ -81,11 +80,9 @@ class BlockChain:
 
     def compute_saldo(self):
         self.saldo = {}
-        self.processed_transactions = []
         self.used_ids = []
         for block in self.longest_chain:
             for transaction in block.transactions:
-                self.processed_transactions.append(transaction.signature)
                 self.used_ids.append(transaction.unique_id)
 
                 if isinstance(transaction, Transaction):
@@ -154,8 +151,8 @@ def main():
 
     try:
         while True:
-            message = socket.recv().decode()
-            block: Block = pickle.loads(base64.b64decode(message))
+            message = socket.recv()
+            block: Block = pickle.loads(message)
             blockchain.add_block(block)
             if args.prune:
                 blockchain.prune()

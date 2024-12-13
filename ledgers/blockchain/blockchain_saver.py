@@ -12,7 +12,6 @@ from time import sleep
 import argparse
 import anytree
 import sqlite3
-import base64
 import pickle
 import zmq
 import os
@@ -44,7 +43,7 @@ class BlockChain:
         else:
             self.genesis_nodes.append(node)
         
-        self.nodes[block.b64_hash()] = node
+        self.nodes[block.hex_digest()] = node
 
         self.post_add_routine()
 
@@ -178,7 +177,7 @@ def save_block_to_db(con, cur, block: Block):
         transactions.append(",".join(fields))
     col_names = "('int_id', 'nonce', 'hash', 'previous_hash', 'transactions')"
     hash = BitArray(block.hash()).bin
-    previous_hash = BitArray(base64.b64decode(block.previous_hash.encode())).bin
+    previous_hash = BitArray(hex=block.previous_hash).bin
     values = f"('{block.id}', {block.nonce}, '{hash}', '{previous_hash}', '{";".join(transactions)}')"
     cur.execute(f"INSERT INTO blockchain_block {col_names} VALUES {values}")
     con.commit()

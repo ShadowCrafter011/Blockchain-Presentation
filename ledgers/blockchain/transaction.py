@@ -1,8 +1,8 @@
 from cryptography.hazmat.primitives.hashes import Hash, SHA256
 from cryptography.exceptions import InvalidSignature
+from bitstring import BitArray
 from signer import Signer
 from time import time
-import base64
 
 class Transaction:
     @classmethod
@@ -11,7 +11,7 @@ class Transaction:
         
         digest = Hash(SHA256())
         digest.update(f"{time()}, {name}, {to}, {amount}".encode())
-        unique_id = base64.b64encode(digest.finalize()).decode()
+        unique_id = BitArray(digest.finalize()).hex
 
         signature = signer.sign_message(
             f"{name}, {to}, {amount}, {unique_id}",
@@ -63,7 +63,7 @@ class MintTransaction:
         
         digest = Hash(SHA256())
         digest.update(f"{time()}, {minter}, {amount}".encode())
-        self.unique_id = base64.b64encode(digest.finalize()).decode()
+        self.unique_id = BitArray(digest.finalize()).hex
 
         self.signature = Signer().sign_message(
             f"{minter}, {amount}, {self.unique_id}",

@@ -10,7 +10,6 @@ from signer import Signer
 from block import Block
 from time import sleep
 import pickle
-import base64
 import json
 import zmq
 
@@ -23,7 +22,7 @@ class FraudulentMiner:
         blockchain = BlockChain.load()
 
         if blockchain.last_block:
-            self.block = Block(FraudulentId(blockchain.last_block.id + 1), previous_hash=blockchain.last_block.b64_hash())
+            self.block = Block(FraudulentId(blockchain.last_block.id + 1), previous_hash=blockchain.last_block.hex_digest())
         else:
             self.block = Block(FraudulentId(0))
 
@@ -48,7 +47,7 @@ class FraudulentMiner:
                 socket.send(pickled_block)
                 socket.recv()
 
-            self.block = Block(FraudulentId(self.block.id + 1), previous_hash=self.block.b64_hash())
+            self.block = Block(FraudulentId(self.block.id + 1), previous_hash=self.block.hex_digest())
             self.block.add_transaction(MintTransaction(self.name, 50))
         else:
             sleep(1 / self.hashes)

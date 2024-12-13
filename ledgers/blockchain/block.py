@@ -1,7 +1,6 @@
 from cryptography.hazmat.primitives.hashes import Hash, SHA256
 from transaction import Transaction, MintTransaction
 from bitstring import BitArray
-import base64
 
 class Block:
     def __init__(self, id, previous_hash=""):
@@ -25,8 +24,8 @@ class Block:
             digest.update(transaction.to_bytes())
         return digest.finalize()
     
-    def b64_hash(self) -> str:
-        return base64.b64encode(self.hash()).decode()
+    def hex_digest(self) -> str:
+        return BitArray(self.hash()).hex
     
     def __str__(self):
         transaction_lines = []
@@ -41,7 +40,7 @@ class Block:
                     f"{transaction.minter} gets {transaction.amount} DD"
                 )
         hash = f"Block hash {BitArray(self.hash()).bin[:20]}"
-        previous_hash = f"Previous hash {BitArray(base64.b64decode(self.previous_hash)).bin[:20]}"
+        previous_hash = f"Previous hash {BitArray(hex=self.previous_hash).bin[:20]}"
         block_id = f"Block {self.id}"
         nonce = f"Nonce {self.nonce}"
         no_transactions = "No transactions"

@@ -2,9 +2,9 @@
 
 from cryptography.hazmat.primitives.hashes import Hash, SHA256
 from parser import args as parse_args
+from bitstring import BitArray
 from signer import Signer
 from time import time
-import base64
 import json
 import zmq
 import os
@@ -27,7 +27,7 @@ def main():
         digest.update(
             f"{time()}, {args.name}, {args.to}, {args.amount}".encode()
         )
-        unique_id = base64.b64encode(digest.finalize()).decode()
+        unique_id = BitArray(digest.finalize()).hex
 
     try:
         signature = signer.sign_message(f"{args.name}, {args.to}, {args.amount}, {unique_id}", args.name, args.password)

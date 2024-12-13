@@ -2,7 +2,7 @@ from cryptography.hazmat.primitives.serialization import load_pem_public_key
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.exceptions import InvalidSignature
-import base64
+from bitstring import BitArray
 import os
 
 
@@ -11,14 +11,14 @@ class Signer:
         name = name.lower()
 
         signature = self.__get_private_key(name, password).sign(
-            message.encode("utf-8"),
+            message.encode(),
             padding.PSS(
                 mgf=padding.MGF1(hashes.SHA256()),
                 salt_length=padding.PSS.MAX_LENGTH
             ),
             hashes.SHA256()
         )
-        return base64.b64encode(signature).decode("utf-8")
+        return BitArray(signature).hex
 
     def verify_signature(self, message: str, name: str, signature: str) -> bool:
         name = name.lower()
@@ -28,8 +28,8 @@ class Signer:
                 public_key = load_pem_public_key(pem_data.read())
             
             public_key.verify(
-                base64.b64decode(signature),
-                message.encode("utf-8"),
+                BitArray(hex=signature).bytes,
+                message.encode(),
                 padding.PSS(
                     mgf=padding.MGF1(hashes.SHA256()),
                     salt_length=padding.PSS.MAX_LENGTH

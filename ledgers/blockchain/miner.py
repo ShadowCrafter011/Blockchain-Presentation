@@ -12,7 +12,6 @@ from block import Block
 from time import sleep
 import argparse
 import pickle
-import base64
 import json
 import zmq
 
@@ -49,7 +48,7 @@ class Miner:
                 continue
             
             if blockchain.last_block:
-                block = Block(blockchain.last_block.id + 1, previous_hash=blockchain.last_block.b64_hash())
+                block = Block(blockchain.last_block.id + 1, previous_hash=blockchain.last_block.hex_digest())
             else:
                 block = Block(0)
 
@@ -69,7 +68,7 @@ class Miner:
 
                 block.add_transaction(transaction)
 
-            msg = f"{self.name}: Trying nonce for Block {block.id} with {block.num_transactions()} transaction{"s" if block.num_transactions() != 1 else ""}"
+            msg = f"{self.name}: Trying to find nonce for Block {block.id} with {block.num_transactions()} transaction{"s" if block.num_transactions() != 1 else ""}"
             if msg != last_log:
                 print(msg)
                 last_log = msg

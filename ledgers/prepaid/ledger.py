@@ -32,23 +32,23 @@ def main():
                 id, name, to, amount, signature = stripped_line.split(", ")
                 id = int(id)
                 amount = float(amount)
-                if id in ids:
-                    print(f"Transaction with duplicate id was rejected: {name} payed {amount}")
-                    continue
-                ids.append(id)
-                if id > max_id:
-                    max_id = id
-                if not name in currency_amount:
-                    currency_amount[name] = prepay_amount
-                if not to in currency_amount:
-                    currency_amount[to] = prepay_amount
-                if currency_amount[name] >= amount:
-                    currency_amount[name] -= amount
-                    currency_amount[to] += amount
-                else:
-                    print(f"Overpaid transaction was rejected: {name} to {to} overpaied by {amount - currency_amount[name]} DD")
-                    continue
                 if verify_transaction(signer, name, to, id, amount, signature):
+                    if id in ids:
+                        print(f"Transaction with duplicate id was rejected: {name} payed {amount}")
+                        continue
+                    ids.append(id)
+                    if id > max_id:
+                        max_id = id
+                    if not name in currency_amount:
+                        currency_amount[name] = prepay_amount
+                    if not to in currency_amount:
+                        currency_amount[to] = prepay_amount
+                    if currency_amount[name] >= amount:
+                        currency_amount[name] -= amount
+                        currency_amount[to] += amount
+                    else:
+                        print(f"Overpaid transaction was rejected: {name} to {to} overpaied by {amount - currency_amount[name]} DD")
+                        continue
                     ledger.append({
                         "id": id,
                         "name": name,
@@ -70,7 +70,7 @@ def main():
             return
 
         case "list":
-            if len(currency_amount):
+            if len(currency_amount) == 0:
                 print("Ledger is empty")
             for name, currency_left in currency_amount.items():
                 print(f"{name} has {currency_left} DD")

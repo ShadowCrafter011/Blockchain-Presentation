@@ -1,4 +1,5 @@
 {
     "editor.wordWrap": "off",
-    "terminal.integrated.fontSize": 25
+    "terminal.integrated.fontSize": 25,
+    "editor.fontSize": 20
 }
